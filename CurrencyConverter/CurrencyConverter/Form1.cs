@@ -15,12 +15,25 @@ namespace CurrencyConverter
         public Form1()
         {
             InitializeComponent();
+            ListInit init = new ListInit();
+            for (int i = 0; i < init.Codes.Count; i++)
+            {
+                string line = string.Format("{0} - {1}", init.Codes.ElementAt(i), init.Descriptions.ElementAt(i));
+
+                ListViewItem item = new ListViewItem(line);
+                item.Tag = init.Codes.ElementAt(i);
+                listView1.Items.Add(item);
+
+                item = new ListViewItem(line);
+                item.Tag = init.Codes.ElementAt(i);
+                listView2.Items.Add(item);
+            }
         }
 
-        static double lastExchange = 0;
         static bool documentReady = true;
+        static bool converting = false;
 
-        void requestExchange(string from, string to, double value, string date)
+        double requestExchange(string from, string to, double value, string date)
         {
             string link = String.Format("http://{0}.fxexchangerate.com/{1}-{2}-exchange-rates-history.html", from, to, date);
             documentReady = false;
@@ -60,8 +73,7 @@ namespace CurrencyConverter
             string number = "";
             for (; position < contentString.Length && isNum(contentString[position]); position++)
                 number += contentString[position];
-            lastExchange = Convert.ToDouble(number.Replace('.', ','));
-            MessageBox.Show(lastExchange.ToString());
+            return value * Convert.ToDouble(number.Replace('.', ','));
         }
 
         static bool isNum(char s)
@@ -69,10 +81,46 @@ namespace CurrencyConverter
             return ((s >= '0' && s <= '9') || s == '.');
         }
 
+        void convert(int sourceFieldNumber)
+        {
+            if (converting)
+                return;
+            converting = true;
+            TextBox sourceField = ((sourceFieldNumber == 1) ? textBox1 : textBox2);
+            TextBox destField = ((sourceFieldNumber == 2) ? textBox1 : textBox2);
+            sourceField.Enabled = false;
+            try
+            {
+
+                string sourceCode = ((sourceFieldNumber == 1) ? listView1.SelectedItems[0].Tag.ToString() : listView2.SelectedItems[0].Tag.ToString());
+                string destCode = ((sourceFieldNumber == 2) ? listView1.SelectedItems[0].Tag.ToString() : listView2.SelectedItems[0].Tag.ToString());
+                double value = Convert.ToDouble(sourceField.Text.Replace('.', ','));
+                string date = dateTimePicker1.Value.ToString("yyyy_MM_dd");
+                destField.Text = requestExchange(sourceCode, destCode, value, date).ToString();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            sourceField.Enabled = true;
+            converting = false;
+        }
+
         private void button1_Click(object sender, EventArgs e)
         {
             requestExchange("JPY", "CHF", 666, dateTimePicker1.Value.ToString("yyyy_MM_dd"));
         }
 
+        private void textBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return)
+                convert(1);
+        }
+
+        private void textBox2_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return)
+                convert(2);
+        }
     }
 }

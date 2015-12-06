@@ -1,35 +1,23 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Zayko.Finance
+namespace CurrencyConverter
 {
-
-    /// <summary>
-    /// Base class contains list of supported currencies
-    /// </summary>
-    public sealed class CurrencyList
+    class ListInit
     {
-        // Number of supported currencies:
-        private static int initialCount = 159;
-
-        private static ReadOnlyCollection<string> _currencyCodes = 
-            new ReadOnlyCollection<string>(InitializeCurrencyCodes());
-
-        private static readonly ReadOnlyCollection<string> _currencyDescriptions = 
-            new ReadOnlyCollection<string>(InitializeCurrencyDescriptions());
-
-        /// <summary>
-        /// Return number of supported Currencies
-        /// </summary>
-        public static int Count
+        public ListInit()
         {
-            get { return _currencyCodes.Count; }
+            Codes = InitializeCurrencyCodes();
+            Descriptions = InitializeCurrencyDescriptions();
         }
 
-        #region Methods
+        public IList<string> Codes;
+        public IList<string> Descriptions;
+        private static int initialCount = 159;
 
-        #region Initializing Currency Codes
         private static IList<string> InitializeCurrencyCodes()
         {
             List<string> codes = new List<string>(initialCount);
@@ -196,9 +184,7 @@ namespace Zayko.Finance
 
             return codes;
         }
-        #endregion
 
-        #region Initializing Currency Descriptions
         private static IList<string> InitializeCurrencyDescriptions()
         {
             List<string> descriptions = new List<string>(initialCount);
@@ -365,90 +351,5 @@ namespace Zayko.Finance
 
             return descriptions;
         }
-        #endregion
-
-        /// <summary>
-        /// Returns list of supported Currency Codes
-        /// </summary>
-        public static ReadOnlyCollection<string> Codes
-        {
-            get 
-            { 
-                return _currencyCodes; 
-            }
-        }
-
-        /// <summary>
-        /// Returns list of supported Currency Names
-        /// </summary>
-        public static ReadOnlyCollection<string> Descriptions
-        {
-            get 
-            { 
-                return _currencyDescriptions; 
-            }
-        }
-
-        /// <summary>
-        /// Returns Currency code by its number
-        /// </summary>
-        /// <param name="index">Number to get</param>
-        /// <returns>Tree-chars currency code</returns>
-        public static string GetCode(int index)
-        {
-            return _currencyCodes[index];
-        }
-
-        /// <summary>
-        /// Returns currency Code by its Name
-        /// </summary>
-        /// <param name="description">A Currency Name</param>
-        /// <returns>Tree-chars currency code</returns>
-        public static string GetCode(string description)
-        {
-            return _currencyCodes[_currencyDescriptions.IndexOf(description)];
-        }
-
-        /// <summary>
-        /// Returns Currency index by its Code
-        /// </summary>
-        /// <param name="code">Tree-chars currency code</param>
-        /// <returns>Position in the list</returns>
-        public static int GetCodeIndex(string code)
-        {
-            return _currencyCodes.IndexOf(code);
-        }
-
-        /// <summary>
-        /// Returns Currency Name by its position in the list
-        /// </summary>
-        /// <param name="index">Position in the list</param>
-        /// <returns>A Currency Name</returns>
-        public static string GetDescription(int index)
-        {
-            return _currencyDescriptions[index];
-        }
-
-        /// <summary>
-        /// Returns Currency Name by its code
-        /// </summary>
-        /// <param name="code">Three-chars Currency Code</param>
-        /// <returns>A Currency Name</returns>
-        public static string GetDescription(string code)
-        {
-            return _currencyDescriptions[_currencyCodes.IndexOf(code)];
-        }
-
-        /// <summary>
-        /// Returns Currency position in the list by its Name
-        /// </summary>
-        /// <param name="description">A Currency Name</param>
-        /// <returns>Currency position</returns>
-        public static int GetDescriptionIndex(string description)
-        {
-            return _currencyDescriptions.IndexOf(description);
-        }
-
-        #endregion
     }
 }
