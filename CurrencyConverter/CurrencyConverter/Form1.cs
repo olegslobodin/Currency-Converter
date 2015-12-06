@@ -15,6 +15,10 @@ namespace CurrencyConverter
         public Form1()
         {
             InitializeComponent();
+            webExtractor1 = new WebExtractor(webBrowser1);
+            view1 = new View(textBox1, textBox2, listView1, listView2, dateTimePicker1, webExtractor1);
+            webExtractor1.addObserver(view1);
+
             ListInit init = new ListInit();
             for (int i = 0; i < init.Codes.Count; i++)
             {
@@ -30,97 +34,19 @@ namespace CurrencyConverter
             }
         }
 
-        static bool documentReady = true;
-        static bool converting = false;
-
-        double requestExchange(string from, string to, double value, string date)
-        {
-            string link = String.Format("http://{0}.fxexchangerate.com/{1}-{2}-exchange-rates-history.html", from, to, date);
-            documentReady = false;
-            webBrowser1.Navigate(link);
-            webBrowser1.DocumentCompleted += delegate
-            {
-                documentReady = true;
-            };
-            while (!documentReady)
-                Application.DoEvents();
-            HtmlElementCollection collection = webBrowser1.Document.All;
-            List<string> contents = new List<string>();
-
-            /*
-             * Adds all inner-text of a tag, including inner-text of sub-tags
-             * ie. <html><body><a>test</a><b>test 2</b></body></html> would do:
-             * "test test 2" when collection[i] == <html>
-             * "test test 2" when collection[i] == <body>
-             * "test" when collection[i] == <a>
-             * "test 2" when collection[i] == <b>
-             */
-            for (int i = 0; i < collection.Count; i++)
-            {
-                if (!string.IsNullOrEmpty(collection[i].InnerText))
-                {
-                    contents.Add(collection[i].InnerText);
-                }
-            }
-
-            /*
-             * <html><body><a>test</a><b>test 2</b></body></html>
-             * outputs: test test 2|test test 2|test|test 2
-             */
-            string contentString = string.Join("|", contents.ToArray());
-            int position = contentString.IndexOf(string.Format("1 {0} =", from));
-            for (++position; position < contentString.Length && !isNum(contentString[position]); position++) ;
-            string number = "";
-            for (; position < contentString.Length && isNum(contentString[position]); position++)
-                number += contentString[position];
-            return value * Convert.ToDouble(number.Replace('.', ','));
-        }
-
-        static bool isNum(char s)
-        {
-            return ((s >= '0' && s <= '9') || s == '.');
-        }
-
-        void convert(int sourceFieldNumber)
-        {
-            if (converting)
-                return;
-            converting = true;
-            TextBox sourceField = ((sourceFieldNumber == 1) ? textBox1 : textBox2);
-            TextBox destField = ((sourceFieldNumber == 2) ? textBox1 : textBox2);
-            sourceField.Enabled = false;
-            try
-            {
-
-                string sourceCode = ((sourceFieldNumber == 1) ? listView1.SelectedItems[0].Tag.ToString() : listView2.SelectedItems[0].Tag.ToString());
-                string destCode = ((sourceFieldNumber == 2) ? listView1.SelectedItems[0].Tag.ToString() : listView2.SelectedItems[0].Tag.ToString());
-                double value = Convert.ToDouble(sourceField.Text.Replace('.', ','));
-                string date = dateTimePicker1.Value.ToString("yyyy_MM_dd");
-                destField.Text = requestExchange(sourceCode, destCode, value, date).ToString();
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message);
-            }
-            sourceField.Enabled = true;
-            converting = false;
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            requestExchange("JPY", "CHF", 666, dateTimePicker1.Value.ToString("yyyy_MM_dd"));
-        }
+        public WebExtractor webExtractor1;
+        View view1;
 
         private void textBox1_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Return)
-                convert(1);
+                view1.updateFields(1);
         }
 
         private void textBox2_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Return)
-                convert(2);
+                view1.updateFields(2);
         }
     }
 }
